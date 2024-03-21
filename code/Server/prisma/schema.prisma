@@ -1,0 +1,56 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model cube {
+  id              Int           @id @default(autoincrement())
+  uuid            String        @unique(map: "uuid_UNIQUE") @db.VarChar(45)
+  scanned_at      DateTime?     @db.Timestamp(0)
+  released_at     DateTime?     @db.Timestamp(0)
+  id_person       Int
+  id_cube_dropper Int?
+  cube_dropper    cube_dropper? @relation(fields: [id_cube_dropper], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "cube_cube_dropper_fk")
+  person          person        @relation(fields: [id_person], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "cube_person_fk")
+
+  @@index([id_cube_dropper], map: "cube_cube_dropper_fk_idx")
+  @@index([id_person], map: "cube_person_fk_idx")
+}
+
+model cube_dropper {
+  id              Int           @id @default(autoincrement())
+  position        Int
+  id_pickup_point Int?
+  cube            cube[]
+  pickup_point    pickup_point? @relation(fields: [id_pickup_point], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "cube_dropper_pickup_point_fk")
+
+  @@index([id_pickup_point], map: "_idx")
+}
+
+model person {
+  id      Int     @id @default(autoincrement())
+  uuid    String? @db.VarChar(255)
+  name    String? @db.VarChar(255)
+  surname String? @db.VarChar(255)
+  cube    cube[]
+}
+
+model pickup_point {
+  id           Int            @id @default(autoincrement())
+  position     Int
+  cube_dropper cube_dropper[]
+  cube_scanner cube_scanner[]
+}
+
+model cube_scanner {
+  id              Int           @id @default(autoincrement())
+  ip_address      String?       @db.VarChar(45)
+  id_pickup_point Int?
+  pickup_point    pickup_point? @relation(fields: [id_pickup_point], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_cube_scanner_pickup_point")
+
+  @@index([id_pickup_point], map: "fk_cube_scanner_pickup_point_idx")
+}
